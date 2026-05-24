@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RoadHelp.Api</name>
+    </assembly>
+    <members>
+        <member name="M:RoadHelp.Api.Controllers.AuthController.SendOtp(RoadHelp.Api.Dtos.RequestOtpDto)">
+            <summary>
+            Отправка OTP кода для аутентификации (вход или регистрация).
+            </summary>
+            <param name="dto">Телефон и цель (например: register, login)</param>
+            <returns>Статус отправки кода</returns>
+        </member>
+        <member name="M:RoadHelp.Api.Controllers.AuthController.VerifyOtp(RoadHelp.Api.Dtos.VerifyOtpDto)">
+            <summary>
+            Подтверждение OTP кода. Возвращает JWT токен и устанавливает HttpOnly cookie с Refresh токеном.
+            Если цель register и пользователя нет - в БД будет создана новая учетная запись выбранной роли.
+            </summary>
+            <param name="dto">Номер телефона, OTP код и желаемая роль</param>
+            <returns>Access и Refresh токены</returns>
+        </member>
+        <member name="M:RoadHelp.Api.Controllers.ExecutorsController.UploadDocuments(System.Collections.Generic.List{Microsoft.AspNetCore.Http.IFormFile})">
+            <summary>
+            Загрузка документов исполнителя в S3 (приватно). Возвращает предподписанные URL для проверки загрузки.
+            Принимает список файлов (картинки или PDF), проверяет размер и тип, сохраняет ключи в профиле исполнителя.
+            </summary>
+            <param name="files">Список файлов для загрузки (image/* или application/pdf)</param>
+            <returns>Список предподписанных URL</returns>
+        </member>
+        <member name="M:RoadHelp.Api.Controllers.OrdersUserController.CreateOrder(RoadHelp.Api.Dtos.CreateOrderDto)">
+            <summary>
+            Создание нового заказа на выезд/ремонт пользователем (клиентом). Заказ попадет в статус PENDING.
+            </summary>
+            <param name="dto">Координаты, адрес, описание и тип услуги</param>
+            <returns>ID созданного заказа</returns>
+        </member>
+        <member name="M:RoadHelp.Api.Controllers.PaymentController.PayOrder(System.Guid)">
+            <summary>
+            Провести оплату по заказу. Берёт дефолтную карту пользователя и пытается списать сумму.
+            При успешной оплате переводит заказ в статус COMPLETED и сохраняет транзакцию.
+            </summary>
+            <param name="id">ID заказа</param>
+            <returns>Статус операции оплаты</returns>
+        </member>
+        <member name="M:RoadHelp.Api.Controllers.UsersController.UploadAvatar(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Загрузить и установить аватар пользователя. Проверяет сигнатуру файла, максимальный размер и сохраняет публичную ссылку в профиле.
+            </summary>
+            <param name="file">Файл изображения (JPEG/PNG)</param>
+            <returns>Публичный URL загруженного аватара</returns>
+        </member>
+        <member name="T:RoadHelp.Api.Dtos.RequestOtpDto">
+            <summary>
+            DTO для запроса OTP по номеру телефона.
+            </summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.RequestOtpDto.Phone">
+            <summary>Номер телефона в международном формате</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.RequestOtpDto.Purpose">
+            <summary>Цель запроса: "login" или "register"</summary>
+        </member>
+        <member name="T:RoadHelp.Api.Dtos.VerifyOtpDto">
+            <summary>
+            DTO для проверки OTP и получения токенов.
+            </summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.VerifyOtpDto.Phone">
+            <summary>Номер телефона</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.VerifyOtpDto.Otp">
+            <summary>Код OTP, присланный пользователю</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.VerifyOtpDto.Purpose">
+            <summary>Цель: "login" или "register"</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.VerifyOtpDto.Role">
+            <summary>Роль, на которую регистрируется пользователь (опционально)</summary>
+        </member>
+        <member name="T:RoadHelp.Api.Dtos.AuthResponseDto">
+            <summary>
+            DTO ответа аутентификации: access и refresh токены.
+            </summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.AuthResponseDto.AccessToken">
+            <summary>JWT access token</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.AuthResponseDto.RefreshToken">
+            <summary>Refresh token для получения нового access token</summary>
+        </member>
+        <member name="T:RoadHelp.Api.Dtos.CreateOrderDto">
+            <summary>
+            DTO для создания заказа: координаты, адрес и тип услуги.
+            </summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.CreateOrderDto.Lat">
+            <summary>Широта</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.CreateOrderDto.Lng">
+            <summary>Долгота</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.CreateOrderDto.Address">
+            <summary>Адрес места вызова</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.CreateOrderDto.ServiceType">
+            <summary>Тип услуги (например, эвакуатор/ремонт)</summary>
+        </member>
+        <member name="P:RoadHelp.Api.Dtos.CreateOrderDto.Description">
+            <summary>Дополнительное описание</summary>
+        </member>
+        <member name="T:RoadHelp.Api.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:RoadHelp.Api.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RoadHelp.Api.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RoadHelp.Api.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

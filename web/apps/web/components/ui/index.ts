@@ -1,0 +1,12 @@
+// Барель экспортов для UI-компонентов.
+export * from './button'
+export * from './icon-button'
+export * from './input'
+export * from './otp-input'
+export * from './card'
+export * from './spinner'
+export * from './badge'
+export * from './skeleton'
+export * from './avatar'
+export * from './empty-state'
+export * from './icon'

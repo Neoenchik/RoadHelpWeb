@@ -1,0 +1,23 @@
+{
+  "name": "road-help",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:web": "npm run dev -w apps/web",
+    "build:web": "npm run build -w apps/web",
+    "lint:web": "npm run lint -w apps/web",
+    "test:web": "npm run test -w apps/web",
+    "openapi:gen": "npm run gen -w packages/shared",
+    "stop": "docker compose down",
+    "stop:clean": "docker compose down -v",
+    "logs": "docker compose logs -f"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
