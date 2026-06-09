@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      API_URL: http://host.docker.internal:8080
+      REDIS_URL: redis://host.docker.internal:6379
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,2 @@
+DELETE FROM public."Orders" WHERE "Id" = '8a48f2b6-ed12-4490-9bd3-9c17e0584c58';
+INSERT INTO public."Orders" ("Id", "UserId", "ServiceType", "Status", "Lat", "Lng", "Address", "CreatedAt") VALUES ('8a48f2b6-ed12-4490-9bd3-9c17e0584c58', '30d2cf96-f17e-4348-b244-d1d5341d2e49', 1, 0, 55.7558, 37.6176, 'Test', NOW());

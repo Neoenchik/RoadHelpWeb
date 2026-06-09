@@ -1,0 +1,67 @@
+# dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.cursor/
+*.swp
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# generated
+apps/web/public/sw.js
+apps/web/public/workbox-*.js
+packages/shared/dist/
+packages/shared/src/openapi.ts
+
+# docker volumes / temp
+*.new
+*.zip
+web/test-*.json
+server/verify.json
+
+# IDE / AI assistants
+web/.claude/
+backend-tasks.md
