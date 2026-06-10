@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   allowedDevOrigins: ['hazily-unique-wagtail.cloudpub.ru'],
   images: {
     remotePatterns: [

@@ -28,7 +28,7 @@ export async function ensurePushSubscription(): Promise<boolean> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return false
   if (Notification.permission === 'denied') return false
 
-  let permission = Notification.permission
+  let permission: NotificationPermission = Notification.permission
   if (permission !== 'granted') {
     permission = await Notification.requestPermission()
   }
@@ -39,7 +39,7 @@ export async function ensurePushSubscription(): Promise<boolean> {
   if (!sub) {
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID),
+      applicationServerKey: urlBase64ToUint8Array(VAPID) as BufferSource,
     })
   }
   const json = sub.toJSON()

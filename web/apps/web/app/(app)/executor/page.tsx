@@ -54,20 +54,28 @@ function Inner() {
     enabled: profile?.online_status === 'ONLINE',
   })
 
-  const incoming = incomingEvent?.type === 'incoming' && incomingEvent.order
+  const incoming: Order | null = incomingEvent?.type === 'incoming' && incomingEvent.order
     ? {
         id: incomingEvent.order.id,
-        service_type: incomingEvent.order.service_type,
+        user_id: '',
+        executor_id: null,
+        service_type: incomingEvent.order.service_type as Order['service_type'],
         address: incomingEvent.order.address,
         lat: incomingEvent.order.lat,
         lng: incomingEvent.order.lng,
-        estimated_price: incomingEvent.order.estimated_price
-          ? Number(incomingEvent.order.estimated_price)
-          : null,
+        estimated_price: incomingEvent.order.estimated_price ?? null,
+        final_price: null,
+        cancel_reason: null,
+        created_at: new Date().toISOString(),
+        matched_at: null,
+        accepted_at: null,
+        arrived_at: null,
+        completed_at: null,
         description: incomingEvent.order.description,
-        status: 'PENDING' as const,
+        status: 'PENDING',
+        executor: null,
       }
-    : incomingPoll
+    : (incomingPoll ?? null)
 
   const setStatus = useMutation({
     mutationFn: async (status: 'ONLINE' | 'OFFLINE') =>

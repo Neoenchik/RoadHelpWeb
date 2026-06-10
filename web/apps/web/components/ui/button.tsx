@@ -10,6 +10,7 @@ import {
   isValidElement,
   type ButtonHTMLAttributes,
   type ReactElement,
+  type ReactNode,
 } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -30,6 +31,8 @@ const buttonVariants = cva(
           'bg-primary-500 text-white hover:bg-primary-400 active:bg-primary-600 shadow-glow',
         secondary:
           'bg-surface-raised text-ink-900 border border-ink-300 hover:bg-surface-sunken',
+        raised:
+          'bg-surface-base text-ink-900 shadow-pop hover:bg-surface-raised',
         ghost:
           'bg-transparent text-ink-900 hover:bg-surface-sunken',
         danger:
@@ -66,7 +69,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : 'button'
 
     if (asChild) {
-      const childElement = Children.toArray(children).find((child) => isValidElement(child)) as ReactElement | undefined
+      const childElement = Children.toArray(children).find((child) => isValidElement(child)) as
+        | ReactElement<{ children?: ReactNode }>
+        | undefined
       if (!childElement) return null
 
       const childWithContent = cloneElement(childElement, {
@@ -76,7 +81,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             {childElement.props.children}
           </>
         ),
-      })
+      } as { children: ReactNode })
 
       return (
         <Comp

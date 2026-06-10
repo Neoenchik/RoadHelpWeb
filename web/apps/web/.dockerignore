@@ -5,5 +5,3 @@ __tests__
 *.md
 .env
 .env.*
-apps/web/node_modules
-apps/web/.next

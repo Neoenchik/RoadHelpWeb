@@ -33,6 +33,8 @@
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.5.0",
     "class-variance-authority": "^0.7.0",
+    "lucide-react": "^0.469.0",
+    "@road-help/shared": "file:../../packages/shared",
     "vaul": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-select": "^2.1.0",

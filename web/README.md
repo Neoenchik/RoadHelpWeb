@@ -2,6 +2,8 @@
 
 Roadside assistance platform: .NET 8 API, Next.js frontend, Telegram bot.
 
+> **Полная документация:** [DOCUMENTATION.md](../DOCUMENTATION.md) — архитектура, API, демо-сценарий, FSM, Docker.
+
 ## Architecture
 
 ```
@@ -67,3 +69,15 @@ docker exec web-bot-1 python -m pytest tests/ -q
 See `web/.env.example`. Required for production: `JWT__Secret`, `BOT_TOKEN`, `BOT_SECRET`.
 
 Optional: `NEXT_PUBLIC_YANDEX_MAPS_API_KEY` — если нужны Яндекс.Карты вместо OSM.
+
+## Production (VPS 2 GB / 2 vCPU)
+
+```bash
+cd web
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+- Next.js собирается в **production** (`Dockerfile.prod`, standalone)
+- Лимиты CPU/RAM на каждый контейнер — см. `docker-compose.prod.yml`
+- Бот по умолчанию **выключен** (экономия RAM): `--profile bot` для включения
+- Результаты нагрузочных тестов: [`loadtest/RESULTS.md`](../loadtest/RESULTS.md)

@@ -26,6 +26,7 @@ export function useWebSocket<T = unknown>(
   useEffect(() => {
     if (!path || !token) return
 
+    const authToken = token
     let active = true
     const { hubPath, orderId } = resolveHubPath(path)
 
@@ -37,9 +38,9 @@ export function useWebSocket<T = unknown>(
 
     async function connect() {
       try {
-        const connection = await acquireHubConnection(hubPath, token)
+        const connection = await acquireHubConnection(hubPath, authToken)
         if (!active) {
-          releaseHubConnection(hubPath, token)
+          releaseHubConnection(hubPath, authToken)
           return
         }
 
@@ -75,7 +76,7 @@ export function useWebSocket<T = unknown>(
           connectionRef.current.off(event, handler)
         }
       }
-      releaseHubConnection(hubPath, token)
+      releaseHubConnection(hubPath, authToken)
       connectionRef.current = null
     }
   }, [path, token])
