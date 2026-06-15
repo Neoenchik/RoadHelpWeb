@@ -17,3 +17,7 @@ export const SERVICES: ServiceMeta[] = [
 export function serviceMeta(id: ServiceType): ServiceMeta | undefined {
   return SERVICES.find((s) => s.id === id)
 }
+
+export function serviceLabel(type: string): string {
+  return serviceMeta(type.toLowerCase() as ServiceType)?.name ?? type
+}

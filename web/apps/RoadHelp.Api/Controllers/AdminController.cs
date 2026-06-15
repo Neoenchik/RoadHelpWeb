@@ -287,6 +287,184 @@ public class AdminController : ControllerBase
     [HttpPost("broadcast")]
     public async Task<IActionResult> Broadcast([FromBody] BroadcastDto dto)
     {
-        return Ok(new { sent = await _db.Users.CountAsync(), message = dto.Message });
+        if (string.IsNullOrWhiteSpace(dto.Message))
+            return BadRequest(new { error = "Message is required" });
+
+        var query = _db.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(dto.Role) && Enum.TryParse<Role>(dto.Role, out var role))
+            query = query.Where(u => u.Role == role);
+
+        var sent = await query.CountAsync();
+        Console.WriteLine($"[Broadcast] title={dto.Title} role={dto.Role ?? "ALL"} recipients={sent}: {dto.Message}");
+
+        return Ok(new { sent, message = dto.Message, title = dto.Title, role = dto.Role });
+    }
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var since24 = DateTime.UtcNow.AddHours(-24);
+
+        var usersTotal = await _db.Users.CountAsync();
+        var executorsTotal = await _db.ExecutorProfiles.CountAsync();
+        var executorsVerified = await _db.ExecutorProfiles.CountAsync(e =>
+            e.VerificationStatus == ExecutorVerificationStatus.VERIFIED);
+        var executorsOnline = await _db.ExecutorProfiles.CountAsync(e =>
+            e.OnlineStatus == ExecutorOnlineStatus.ONLINE);
+
+        var activeOrders = await _db.Orders.CountAsync(o =>
+            o.Status != OrderStatus.COMPLETED && o.Status != OrderStatus.CANCELLED);
+        var completed24h = await _db.Orders.CountAsync(o =>
+            o.Status == OrderStatus.COMPLETED && o.CompletedAt >= since24);
+        var cancelled24h = await _db.Orders.CountAsync(o =>
+            o.Status == OrderStatus.CANCELLED && o.CreatedAt >= since24);
+        var disputesOpen = await _db.Orders.CountAsync(o => o.Status == OrderStatus.DISPUTED);
+
+        var revenue24h = await _db.Orders
+            .Where(o => o.Status == OrderStatus.COMPLETED && o.CompletedAt >= since24)
+            .SumAsync(o => o.FinalPrice ?? o.EstimatedPrice ?? 0);
+
+        var recentOrders = await _db.Orders
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(8)
+            .Select(o => new
+            {
+                id = o.Id,
+                service_type = o.ServiceType.ToString(),
+                status = o.Status.ToString(),
+                address = o.Address,
+                estimated_price = o.EstimatedPrice,
+                created_at = o.CreatedAt
+            })
+            .ToListAsync();
+
+        var pendingExecutors = await _db.ExecutorProfiles.CountAsync(e =>
+            e.VerificationStatus == ExecutorVerificationStatus.PENDING);
+
+        return Ok(new
+        {
+            users_total = usersTotal,
+            executors_total = executorsTotal,
+            executors_verified = executorsVerified,
+            executors_online = executorsOnline,
+            executors_pending = pendingExecutors,
+            active_orders = activeOrders,
+            completed_24h = completed24h,
+            cancelled_24h = cancelled24h,
+            disputes_open = disputesOpen,
+            revenue_24h = revenue24h,
+            recent_orders = recentOrders
+        });
+    }
+
+    [HttpGet("orders/{id:guid}")]
+    public async Task<IActionResult> GetOrder(Guid id)
+    {
+        var order = await _db.Orders
+            .Include(o => o.User)
+            .Include(o => o.Executor)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order == null) return NotFound();
+
+        var logs = await _db.StatusChangeLogs
+            .Where(l => l.TargetType == StatusChangeTargetType.order && l.TargetId == id)
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new
+            {
+                old_status = l.OldStatus,
+                new_status = l.NewStatus,
+                reason = l.Reason,
+                changed_at = l.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            id = order.Id,
+            user_id = order.UserId,
+            executor_id = order.ExecutorId,
+            service_type = order.ServiceType.ToString().ToLower(),
+            status = order.Status.ToString(),
+            lat = order.Lat,
+            lng = order.Lng,
+            address = order.Address,
+            description = order.Description,
+            estimated_price = order.EstimatedPrice,
+            final_price = order.FinalPrice,
+            cancel_reason = order.CancelReason,
+            transaction_id = order.TransactionId,
+            created_at = order.CreatedAt,
+            matched_at = order.MatchedAt,
+            accepted_at = order.AcceptedAt,
+            arrived_at = order.ArrivedAt,
+            completed_at = order.CompletedAt,
+            client = new
+            {
+                id = order.User.Id,
+                first_name = order.User.FirstName,
+                last_name = order.User.LastName,
+                phone = order.User.Phone
+            },
+            executor = order.Executor == null ? null : new
+            {
+                id = order.Executor.Id,
+                first_name = order.Executor.FirstName,
+                last_name = order.Executor.LastName,
+                phone = order.Executor.Phone
+            },
+            status_log = logs
+        });
+    }
+
+    [HttpGet("users/{id:guid}")]
+    public async Task<IActionResult> GetUser(Guid id)
+    {
+        var user = await _db.Users
+            .Include(u => u.ExecutorProfile)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null) return NotFound();
+
+        var ordersCount = await _db.Orders.CountAsync(o => o.UserId == id);
+        var completedCount = await _db.Orders.CountAsync(o =>
+            o.UserId == id && o.Status == OrderStatus.COMPLETED);
+
+        return Ok(new
+        {
+            id = user.Id,
+            first_name = user.FirstName,
+            last_name = user.LastName,
+            phone = user.Phone,
+            email = user.Email,
+            role = user.Role.ToString(),
+            telegram_id = user.TelegramId,
+            created_at = user.CreatedAt,
+            orders_count = ordersCount,
+            completed_orders = completedCount,
+            executor_profile = user.ExecutorProfile == null ? null : new
+            {
+                verification_status = user.ExecutorProfile.VerificationStatus.ToString(),
+                online_status = user.ExecutorProfile.OnlineStatus.ToString(),
+                rating = user.ExecutorProfile.Rating,
+                completed_count = user.ExecutorProfile.CompletedCount,
+                service_types = user.ExecutorProfile.ServiceTypes,
+                vehicle_make = user.ExecutorProfile.VehicleMake,
+                vehicle_plate = user.ExecutorProfile.VehiclePlate
+            }
+        });
+    }
+
+    [HttpDelete("invites/{id:guid}")]
+    public async Task<IActionResult> RevokeInvite(Guid id)
+    {
+        var invite = await _db.Invites.FindAsync(id);
+        if (invite == null) return NotFound();
+        if (invite.UsedAt != null)
+            return BadRequest(new { error = "Invite already used" });
+
+        _db.Invites.Remove(invite);
+        await _db.SaveChangesAsync();
+        return Ok(new { success = true });
     }
 }

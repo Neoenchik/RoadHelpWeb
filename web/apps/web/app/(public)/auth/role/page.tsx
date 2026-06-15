@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { ConsentCheckbox } from '@/components/ui/consent-checkbox'
 import { Icon } from '@/components/ui/icon'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
@@ -22,7 +23,14 @@ export default function RolePage() {
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
   const [picked, setPicked] = useState<'USER' | 'EXECUTOR' | null>(null)
+  const [consent, setConsent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (localStorage.getItem('rh_privacy_consent_v1') === '1') {
+      setConsent(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (hydrated && !accessToken) router.replace('/auth/login')
@@ -43,8 +51,13 @@ export default function RolePage() {
       toast.error('Укажите имя')
       return
     }
+    if (!consent) {
+      toast.error('Необходимо согласие на обработку персональных данных')
+      return
+    }
     setSubmitting(true)
     try {
+      localStorage.setItem('rh_privacy_consent_v1', '1')
       const r = await api.patch('/api/users/me', {
         first_name: first.trim(),
         last_name: last.trim() || null,
@@ -92,6 +105,11 @@ export default function RolePage() {
         <Input label="Имя" value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Алексей" />
         <Input label="Фамилия" value={last} onChange={(e) => setLast(e.target.value)} placeholder="Иванов" />
       </div>
+
+      <ConsentCheckbox
+        checked={consent}
+        onChange={(e) => setConsent(e.target.checked)}
+      />
 
       <Button size="xl" block onClick={onContinue} loading={submitting}>
         Продолжить

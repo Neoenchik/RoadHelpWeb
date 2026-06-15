@@ -32,6 +32,16 @@ export default function AdminInvitesPage() {
     queryFn: async () => (await api.get('/api/admin/invites')).data,
   })
 
+  const revoke = useMutation({
+    mutationFn: async (inviteId: string) =>
+      (await api.delete(`/api/admin/invites/${inviteId}`)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invites'] })
+      toast.success('Приглашение отозвано')
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Не удалось отозвать'),
+  })
+
   const create = useMutation({
     mutationFn: async () => (await api.post('/api/admin/invites', { email, role })).data,
     onSuccess: (data: Invite) => {
@@ -74,7 +84,7 @@ export default function AdminInvitesPage() {
               <th className="p-3 text-left">Создано</th>
               <th className="p-3 text-left">Истекает</th>
               <th className="p-3 text-left">Статус</th>
-              <th className="p-3 text-left">Ссылка</th>
+              <th className="p-3 text-left">Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -86,15 +96,27 @@ export default function AdminInvitesPage() {
                 <td className="p-3 text-caption text-ink-500">{format(new Date(i.expires_at), 'd MMM HH:mm', { locale: ru })}</td>
                 <td className="p-3">{i.used_at ? <Badge variant="success">Использовано</Badge> : <Badge variant="warning">Ожидает</Badge>}</td>
                 <td className="p-3">
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(i.invite_url)
-                      toast.success('Ссылка скопирована')
-                    }}
-                    className="text-caption text-primary-600 hover:underline"
-                  >
-                    Скопировать
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(i.invite_url)
+                        toast.success('Ссылка скопирована')
+                      }}
+                      className="text-caption text-primary-600 hover:underline"
+                    >
+                      Скопировать
+                    </button>
+                    {!i.used_at && (
+                      <button
+                        type="button"
+                        onClick={() => revoke.mutate(i.id)}
+                        className="text-caption text-danger hover:underline"
+                      >
+                        Отозвать
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

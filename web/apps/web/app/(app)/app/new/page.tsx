@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { AuthGuard } from '@/components/auth-guard'
@@ -39,6 +39,10 @@ function Wizard() {
   const [coords, setCoords] = useState<[number, number]>(DEFAULT_CENTER)
   const [address, setAddress] = useState('Москва')
   const [description, setDescription] = useState('')
+
+  const updateCoords = useCallback((c: [number, number]) => {
+    setCoords((prev) => (prev[0] === c[0] && prev[1] === c[1] ? prev : c))
+  }, [])
 
   const create = useMutation({
     mutationFn: async () => {
@@ -80,7 +84,7 @@ function Wizard() {
       {step === 'address' && (
         <AddressStep
           coords={coords}
-          onCoords={setCoords}
+          onCoords={updateCoords}
           address={address}
           onAddress={setAddress}
           onNext={() => setStep('confirm')}
@@ -149,8 +153,7 @@ function AddressStep({
 
   useEffect(() => {
     if (gps) onCoords([gps.lng, gps.lat])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gps])
+  }, [gps, onCoords])
 
   return (
     <div className="relative flex-1">

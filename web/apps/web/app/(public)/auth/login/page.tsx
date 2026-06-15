@@ -2,22 +2,28 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { ConsentCheckbox } from '@/components/ui/consent-checkbox'
 import { Icon } from '@/components/ui/icon'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
+
+const CONSENT_STORAGE_KEY = 'rh_privacy_consent_v1'
 
 const schema = z.object({
   phone: z
     .string()
     .min(11, 'Введите телефон полностью')
     .refine((v) => /^\+?\d{10,15}$/.test(v.replace(/\s/g, '')), 'Формат: +79991234567'),
+  consent: z.boolean().refine((v) => v, {
+    message: 'Необходимо согласие на обработку персональных данных',
+  }),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -42,8 +48,17 @@ function LoginForm() {
   const params = useSearchParams()
   const next = params.get('next') ?? ''
   const {
-    register, handleSubmit, formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+    register, handleSubmit, setValue, formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { consent: false },
+  })
+
+  useEffect(() => {
+    if (localStorage.getItem(CONSENT_STORAGE_KEY) === '1') {
+      setValue('consent', true)
+    }
+  }, [setValue])
 
   function extractErrorMessage(err: any): string {
     const data = err?.response?.data
@@ -57,6 +72,7 @@ function LoginForm() {
   async function onSubmit({ phone }: FormValues) {
     const normalized = normalizePhone(phone)
     try {
+      localStorage.setItem(CONSENT_STORAGE_KEY, '1')
       await api.post('/api/auth/send-otp', { phone: normalized, purpose: 'login' })
       const q = new URLSearchParams({ phone: normalized })
       if (next) q.set('next', next)
@@ -85,13 +101,11 @@ function LoginForm() {
           error={errors.phone?.message}
           {...register('phone')}
         />
+        <ConsentCheckbox {...register('consent')} error={errors.consent?.message} />
         <Button type="submit" size="xl" block loading={isSubmitting}>
           Получить код
         </Button>
       </form>
-      <p className="text-center text-micro text-ink-500">
-        Продолжая, вы принимаете условия использования.
-      </p>
     </Card>
   )
 }

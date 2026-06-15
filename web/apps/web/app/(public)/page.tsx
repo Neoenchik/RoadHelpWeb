@@ -192,6 +192,7 @@ function SiteFooter() {
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-caption text-ink-700">
           <Link href="/auth/login">Войти</Link>
           <Link href="/become-executor">Стать исполнителем</Link>
+          <Link href="/privacy">Политика конфиденциальности</Link>
           <a href="mailto:hello@roadhelp.local">Связаться</a>
         </nav>
       </div>

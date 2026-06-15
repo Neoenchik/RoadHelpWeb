@@ -85,15 +85,20 @@ function MapBlockYandex({
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const markerLayerRef = useRef<any>(null)
+  const onCenterChangeRef = useRef(onCenterChange)
+  const programmaticMoveRef = useRef(false)
+  const cancelledRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
 
+  onCenterChangeRef.current = onCenterChange
+
   useEffect(() => {
-    let cancelled = false
+    cancelledRef.current = false
     async function init() {
       try {
         await loadScript()
         await window.ymaps3.ready
-        if (cancelled || !containerRef.current) return
+        if (cancelledRef.current || !containerRef.current) return
         const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapLayer } = window.ymaps3
         const map = new YMap(containerRef.current, {
           location: { center, zoom },
@@ -106,22 +111,20 @@ function MapBlockYandex({
         mapRef.current = map
         markerLayerRef.current = layer
 
-        if (onCenterChange) {
-          map.update({})
-          map.subscribe?.((event: any) => {
-            if (event?.location?.center) onCenterChange(event.location.center)
-          })
-        }
+        map.subscribe?.((event: any) => {
+          if (cancelledRef.current || programmaticMoveRef.current) return
+          if (event?.location?.center) onCenterChangeRef.current?.(event.location.center)
+        })
 
         // первичная отрисовка маркеров
         renderMarkers()
       } catch (e) {
-        if (!cancelled) setError((e as Error).message)
+        if (!cancelledRef.current) setError((e as Error).message)
       }
     }
     init()
     return () => {
-      cancelled = true
+      cancelledRef.current = true
       mapRef.current?.destroy?.()
       mapRef.current = null
     }
@@ -130,7 +133,13 @@ function MapBlockYandex({
 
   // обновление center снаружи
   useEffect(() => {
-    mapRef.current?.update?.({ location: { center, zoom } })
+    const map = mapRef.current
+    if (!map) return
+    const current = map.location?.center as [number, number] | undefined
+    if (current && current[0] === center[0] && current[1] === center[1]) return
+    programmaticMoveRef.current = true
+    map.update?.({ location: { center, zoom } })
+    programmaticMoveRef.current = false
   }, [center, zoom])
 
   // обновление маркеров

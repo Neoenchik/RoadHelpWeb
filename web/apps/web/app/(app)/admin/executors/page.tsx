@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -25,7 +26,9 @@ interface ExecRow {
 
 export default function AdminExecutorsPage() {
   const qc = useQueryClient()
-  const [filter, setFilter] = useState<string>('')
+  const searchParams = useSearchParams()
+  const initialFilter = searchParams.get('filter') ?? ''
+  const [filter, setFilter] = useState<string>(initialFilter)
   const [q, setQ] = useState('')
 
   const { data, isPending } = useQuery<ExecRow[]>({

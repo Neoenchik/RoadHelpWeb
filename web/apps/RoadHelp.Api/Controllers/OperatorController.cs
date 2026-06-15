@@ -81,6 +81,8 @@ public class OperatorController : ControllerBase
                 service_type = o.ServiceType.ToString(),
                 status = o.Status.ToString(),
                 address = o.Address,
+                lat = o.Lat,
+                lng = o.Lng,
                 user_name = o.User.FirstName,
                 executor_name = o.Executor != null ? o.Executor.FirstName : null,
                 created_at = o.CreatedAt,

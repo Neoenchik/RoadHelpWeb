@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -67,7 +68,11 @@ export default function AdminUsersPage() {
             <tbody>
               {(data ?? []).map((u) => (
                 <tr key={u.id} className="border-b border-ink-300/40 last:border-0">
-                  <td className="p-3">{u.first_name} {u.last_name ?? ''}</td>
+                  <td className="p-3">
+                    <Link href={`/admin/users/${u.id}`} className="text-primary-600 hover:underline">
+                      {u.first_name} {u.last_name ?? ''}
+                    </Link>
+                  </td>
                   <td className="p-3 text-caption text-ink-500">{u.phone ?? u.email ?? '—'}</td>
                   <td className="p-3">{u.role}</td>
                   <td className="p-3 text-right">

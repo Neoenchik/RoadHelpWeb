@@ -8,6 +8,10 @@ import type { MapBlockProps, MapMarker } from './MapBlock'
 
 import 'leaflet/dist/leaflet.css'
 
+function sameCenter(a: [number, number], b: [number, number], eps = 1e-7) {
+  return Math.abs(a[0] - b[0]) < eps && Math.abs(a[1] - b[1]) < eps
+}
+
 export function MapBlockOsm({
   center,
   zoom = 14,
@@ -19,14 +23,20 @@ export function MapBlockOsm({
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const markersRef = useRef<L.Marker[]>([])
+  const onCenterChangeRef = useRef(onCenterChange)
+  const programmaticMoveRef = useRef(false)
+  const cancelledRef = useRef(false)
+  const moveHandlerRef = useRef<(() => void) | null>(null)
+
+  onCenterChangeRef.current = onCenterChange
 
   useEffect(() => {
-    let cancelled = false
+    cancelledRef.current = false
 
     async function init() {
       const L = await import('leaflet')
 
-      if (cancelled || !containerRef.current) return
+      if (cancelledRef.current || !containerRef.current) return
 
       const map = L.map(containerRef.current, {
         center: [center[1], center[0]],
@@ -41,12 +51,13 @@ export function MapBlockOsm({
 
       mapRef.current = map
 
-      if (onCenterChange) {
-        map.on('moveend', () => {
-          const c = map.getCenter()
-          onCenterChange([c.lng, c.lat])
-        })
+      const handler = () => {
+        if (cancelledRef.current || programmaticMoveRef.current) return
+        const c = map.getCenter()
+        onCenterChangeRef.current?.([c.lng, c.lat])
       }
+      moveHandlerRef.current = handler
+      map.on('moveend', handler)
 
       renderMarkers(L, map)
     }
@@ -54,9 +65,14 @@ export function MapBlockOsm({
     void init()
 
     return () => {
-      cancelled = true
-      mapRef.current?.remove()
+      cancelledRef.current = true
+      const map = mapRef.current
+      if (map && moveHandlerRef.current) {
+        map.off('moveend', moveHandlerRef.current)
+      }
+      map?.remove()
       mapRef.current = null
+      moveHandlerRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -64,7 +80,15 @@ export function MapBlockOsm({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    map.setView([center[1], center[0]], zoom, { animate: true })
+
+    const current = map.getCenter()
+    const next: [number, number] = [current.lng, current.lat]
+    const target: [number, number] = [center[0], center[1]]
+    if (sameCenter(next, target) && map.getZoom() === zoom) return
+
+    programmaticMoveRef.current = true
+    map.setView([center[1], center[0]], zoom, { animate: false })
+    programmaticMoveRef.current = false
   }, [center, zoom])
 
   useEffect(() => {
