@@ -13,7 +13,10 @@ describe('api client — Bearer injection', () => {
       id: 'u1', phone: '+79990000000', email: null,
       first_name: 'Иван', last_name: null, avatar_url: null, role: 'USER',
     })
-    const config = await api.interceptors.request.handlers[0]!.fulfilled({
+    const handlers = api.interceptors.request.handlers ?? []
+    expect(handlers.length).toBeGreaterThan(0)
+    const fulfilled = handlers[0]!.fulfilled!
+    const config = await fulfilled({
       headers: { set: vi.fn() } as any,
     } as any)
     expect((config!.headers as any).set).toHaveBeenCalledWith(

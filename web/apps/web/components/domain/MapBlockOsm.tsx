@@ -38,7 +38,10 @@ export function MapBlockOsm({
 
       if (cancelledRef.current || !containerRef.current) return
 
-      const map = L.map(containerRef.current, {
+      const el = containerRef.current
+      if ((el as HTMLElement & { _leaflet_id?: number })._leaflet_id) return
+
+      const map = L.map(el, {
         center: [center[1], center[0]],
         zoom,
         zoomControl: true,

@@ -5,21 +5,20 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using RoadHelp.Api.Controllers;
 using RoadHelp.Api.Services;
-using RoadHelp.Infrastructure.Data;
 using RoadHelp.Application.Dtos;
-using RoadHelp.Domain.Enums;
-using RoadHelp.Domain.Entities;
 using RoadHelp.Application.Interfaces;
+using RoadHelp.Domain.Entities;
+using RoadHelp.Domain.Enums;
 using RoadHelp.Domain.Services;
+using RoadHelp.Infrastructure.Data;
 using RoadHelp.Infrastructure.Services;
 using Xunit;
 
@@ -54,7 +53,7 @@ public class OrdersUserControllerTests
         var fsm = new OrderFsm();
         var ordersHub = CreateHubMock<RoadHelp.Api.Hubs.OrdersHub>();
         var execHub = CreateHubMock<RoadHelp.Api.Hubs.ExecutorsHub>();
-        _controller = new OrdersUserController(_db, fsm, ordersHub.Object, execHub.Object, CreateNoopDemoSimulator());
+        _controller = new OrdersUserController(_db, fsm, ordersHub.Object, execHub.Object, DemoTestHelper.CreateNoopDemoSimulator());
 
         _testUser = new User
         {
@@ -108,7 +107,7 @@ public class OrdersUserControllerTests
     public async Task CreateOrder_InvalidToken_ShouldReturnUnauthorized()
     {
         // Arrange
-        var controller = new OrdersUserController(_db, new OrderFsm(), null!, null!, CreateNoopDemoSimulator());
+        var controller = new OrdersUserController(_db, new OrderFsm(), null!, null!, DemoTestHelper.CreateNoopDemoSimulator());
         var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal() };
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
@@ -132,8 +131,9 @@ internal static class DemoTestHelper
 {
     public static DemoOrderSimulator CreateNoopDemoSimulator()
     {
-        var env = Mock.Of<IHostEnvironment>(e => e.IsDevelopment() == false);
-        return new DemoOrderSimulator(Mock.Of<IServiceScopeFactory>(), env);
+        var env = new Mock<IHostEnvironment>();
+        env.Setup(e => e.EnvironmentName).Returns(Environments.Production);
+        return new DemoOrderSimulator(Mock.Of<IServiceScopeFactory>(), env.Object);
     }
 }
 

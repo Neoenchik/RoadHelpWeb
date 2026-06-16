@@ -1,13 +1,16 @@
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
-WORKDIR /app
+WORKDIR /workspace/apps/web
 
-COPY package.json ./
-RUN npm install --include=dev --legacy-peer-deps --omit=optional --no-audit --no-fund
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY apps/web/docker-entrypoint.sh /usr/local/bin/roadhelp-web-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/roadhelp-web-entrypoint \
+    && chmod +x /usr/local/bin/roadhelp-web-entrypoint
 
 EXPOSE 3000
 
-# Named volume may mount an empty node_modules on first run — install deps then start dev.
-CMD ["sh", "-c", "if [ ! -d node_modules/@microsoft/signalr ] || [ ! -d node_modules/leaflet ]; then npm install --include=dev --legacy-peer-deps --no-audit --no-fund; fi && npm run dev"]
+ENTRYPOINT ["roadhelp-web-entrypoint"]
+CMD ["npm", "run", "dev"]

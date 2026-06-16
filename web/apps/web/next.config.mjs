@@ -1,7 +1,13 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  transpilePackages: ['@road-help/shared'],
   allowedDevOrigins: ['hazily-unique-wagtail.cloudpub.ru'],
   images: {
     remotePatterns: [
@@ -12,6 +18,9 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns'],
+  },
+  turbopack: {
+    root: __dirname,
   },
 }
 

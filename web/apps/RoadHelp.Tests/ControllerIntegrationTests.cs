@@ -3,18 +3,18 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Microsoft.Extensions.Hosting;
+using Moq;
+using RoadHelp.Api.Controllers;
 using RoadHelp.Api.Services;
-using RoadHelp.Infrastructure.Data;
 using RoadHelp.Application.Dtos;
 using RoadHelp.Domain.Entities;
-using RoadHelp.Domain.Services;
-using RoadHelp.Application.Interfaces;
-using RoadHelp.Application.Services;
 using RoadHelp.Domain.Enums;
+using RoadHelp.Domain.Services;
+using RoadHelp.Infrastructure.Data;
 using Xunit;
 
 namespace RoadHelp.Tests

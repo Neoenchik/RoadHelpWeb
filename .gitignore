@@ -29,6 +29,7 @@ htmlcov/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # env
 .env
@@ -61,6 +62,7 @@ packages/shared/src/openapi.ts
 *.zip
 web/test-*.json
 server/verify.json
+loadtest/build-log.txt
 
 # IDE / AI assistants
 web/.claude/
